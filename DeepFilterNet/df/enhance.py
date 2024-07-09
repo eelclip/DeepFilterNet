@@ -89,12 +89,12 @@ def main(args):
         save_audio(file, audio, sr=audio_sr, output_dir=args.output_dir, suffix=suffix, log=False)
 
 
-def get_model_basedir(m: Optional[str]) -> str:
+def get_model_basedir(m: Optional[str], on_lambda: Optional[bool] = False) -> str:
     if m is None:
         m = DEFAULT_MODEL
     is_default_model = m in PRETRAINED_MODELS
     if is_default_model:
-        return maybe_download_model(m)
+        return maybe_download_model(m, on_lambda=on_lambda)
     return m
 
 
@@ -107,6 +107,7 @@ def init_df(
     epoch: Union[str, int, None] = "best",
     default_model: str = DEFAULT_MODEL,
     mask_only: bool = False,
+    on_lambda: Optional[bool] = False
 ) -> Tuple[nn.Module, DF, str, int]:
     """Initializes and loads config, model and deep filtering state.
 
@@ -135,7 +136,7 @@ def init_df(
     except ImportError:
         pass
     use_default_model = model_base_dir is None or model_base_dir in PRETRAINED_MODELS
-    model_base_dir = get_model_basedir(model_base_dir or default_model)
+    model_base_dir = get_model_basedir(m = model_base_dir or default_model, on_lambda=on_lambda)
 
     if not os.path.isdir(model_base_dir):
         raise NotADirectoryError("Base directory not found at {}".format(model_base_dir))
@@ -250,7 +251,7 @@ def enhance(
     return audio
 
 
-def maybe_download_model(name: str = DEFAULT_MODEL) -> str:
+def maybe_download_model(name: str = DEFAULT_MODEL, on_lambda: Optional[bool] = False) -> str:
     """Download a DeepFilterNet model.
 
     Args:
@@ -260,6 +261,9 @@ def maybe_download_model(name: str = DEFAULT_MODEL) -> str:
         - base_dir: Return the model base directory as string.
     """
     cache_dir = get_cache_dir()
+    if on_lambda:
+        cache_dir = f"/tmp/{cache_dir}"
+
     if name.endswith(".zip"):
         name = name.removesuffix(".zip")
     model_dir = os.path.join(cache_dir, name)
