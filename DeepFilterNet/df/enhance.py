@@ -89,14 +89,13 @@ def main(args):
         save_audio(file, audio, sr=audio_sr, output_dir=args.output_dir, suffix=suffix, log=False)
 
 
-def get_model_basedir(m: Optional[str], on_lambda: Optional[bool] = False) -> str:
+def get_model_basedir(m: Optional[str] = None, on_lambda: Optional[bool] = False) -> str:
     if m is None:
         m = DEFAULT_MODEL
     is_default_model = m in PRETRAINED_MODELS
     if is_default_model:
         return maybe_download_model(m, on_lambda=on_lambda)
     return m
-
 
 def init_df(
     model_base_dir: Optional[str] = None,
